@@ -8,6 +8,7 @@
 class WorkflowEmbargoExpiryExtension extends DataExtension {
 
 	private static $db = array(
+        'PublishedDate'        	=> 'SS_Datetime',
 		'DesiredPublishDate'	=> 'SS_Datetime',
 		'DesiredUnPublishDate'	=> 'SS_Datetime',
 		'PublishOnDate'			=> 'SS_Datetime',
@@ -84,18 +85,25 @@ class WorkflowEmbargoExpiryExtension extends DataExtension {
 				new LiteralField('PublishDateIntro', $this->getIntroMessage('PublishDateIntro')),
 				$dt = new Datetimefield('PublishOnDate', _t('WorkflowEmbargoExpiryExtension.PUBLISH_ON', 'Scheduled publish date')),
 				$ut = new Datetimefield('UnPublishOnDate', _t('WorkflowEmbargoExpiryExtension.UNPUBLISH_ON', 'Scheduled un-publish date')),
+
+				new HeaderField('PublishedDateHeader', _t('WorkflowEmbargoExpiryExtension.PUBLISHED_DATE_H3', 'Published Date'), 3),
+				new LiteralField('PublishedDateIntro', $this->getIntroMessage('PublishedDateIntro')),
+				$pt = new Datetimefield('PublishedDate', _t('WorkflowEmbargoExpiryExtension.PUBLISHED', 'Published date')),
 			));
 		}
 
 		$dt->getDateField()->setConfig('showcalendar', true);
 		$ut->getDateField()->setConfig('showcalendar', true);
+		$pt->getDateField()->setConfig('showcalendar', true);
 		$dt->getTimeField()->setConfig('timeformat', 'HH:mm');
 		$ut->getTimeField()->setConfig('timeformat', 'HH:mm');
+		$pt->getTimeField()->setConfig('timeformat', 'HH:mm');
 
 		// Enable a jQuery-UI timepicker widget
 		if(self::$showTimePicker) {
 			$dt->getTimeField()->addExtraClass('hasTimePicker');
 			$ut->getTimeField()->addExtraClass('hasTimePicker');
+			$pt->getTimeField()->addExtraClass('hasTimePicker');
 		}
 	}
 
@@ -176,6 +184,22 @@ class WorkflowEmbargoExpiryExtension extends DataExtension {
 		}
 	}
 
+    /**
+     * Event handler called before Publishing SiteTree DataObject, overloaded from parent
+     *
+     * @uses DataObject->onBeforePublish()
+     */
+    public function onBeforePublish() {
+        if (!$this->owner->PublishedDate || ($this->owner->PublishedDate && is_null($this->owner->PublishedDate))) {
+            if ($this->owner->PublishOnDate && (!is_null($this->owner->PublishOnDate))) {
+                $date = $this->owner->PublishOnDate;
+            } else {
+                $date = SS_Datetime::now()->getValue();
+            }
+            $this->owner->PublishedDate = $date;
+        }
+    }
+
 	/*
 	 * Define an array of message-parts for use by {@link getIntroMessage()}
 	 *
@@ -188,6 +212,10 @@ class WorkflowEmbargoExpiryExtension extends DataExtension {
 				'INTRO'=>_t('WorkflowEmbargoExpiryExtension.REQUESTED_PUBLISH_DATE_INTRO','Enter a date and/or time to specify embargo and expiry dates.'),
 				'BULLET_1'=>_t('WorkflowEmbargoExpiryExtension.REQUESTED_PUBLISH_DATE_INTRO_BULLET_1','These settings won\'t take effect until any approval actions are run'),
 				'BULLET_2'=>_t('WorkflowEmbargoExpiryExtension.REQUESTED_PUBLISH_DATE_INTRO_BULLET_2','If an embargo is already set, adding a new one prior to that date\'s passing will overwrite it')
+			),
+			'PublishedDateIntro' => array(
+				'INTRO'=>_t('WorkflowEmbargoExpiryExtension.PUBLISHED_DATE_INTRO','Please note, this date will be used for sorting on front-end.'),
+				'BULLET_1'=>_t('WorkflowEmbargoExpiryExtension.PUBLISHED_DATE_INTRO_BULLET_1','These date will be automagically populated after first Save & Publish, you can change it manually anytime.'),
 			)
 		);
 		// If there's no effective workflow, no need for the first bullet-point
