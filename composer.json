@@ -21,6 +21,6 @@
 	"require":
 	{
 		"silverstripe/cms": ">=3.0.0",
-		"silverstripe/queuedjobs": "dev-master"
+		"silverstripe/queuedjobs": "^2.8"
 	}
 }

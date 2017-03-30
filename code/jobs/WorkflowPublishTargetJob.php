@@ -22,12 +22,12 @@ class WorkflowPublishTargetJob extends AbstractQueuedJob {
 		if ($target = $this->getObject()) {
 			if ($this->publishType == 'publish') {
 				$target->setIsPublishJobRunning(true);
-				$target->PublishOnDate = '';
+				$target->dbObject('PublishOnDate')->setValue(false);
 				$target->writeWithoutVersion();
 				$target->doPublish();
 			} else if ($this->publishType == 'unpublish') {
 				$target->setIsPublishJobRunning(true);
-				$target->UnPublishOnDate = '';
+				$target->dbObject('UnPublishOnDate')->setValue(false);
 				$target->writeWithoutVersion();
 				$target->doUnpublish();
 			}
